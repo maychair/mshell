@@ -5,11 +5,28 @@
 #include <string.h>
 
 #define EXIT_SUCCESS 0
-#define EXIT_FAILURE -1
+//#define EXIT_FAILURE -1
 void lsh_loop();
 char* lsh_getline();
 char** lsh_split_line(char* line);
 int lsh_execute(char** argv);
+
+//list of builtin commands, followed by their correponding function.
+char *builtin_str[] = {
+  "cd",
+  "exit",
+  "help"
+};
+
+
+int lsh_cd(char **args);
+int lsh_exit(char **args);
+int lsh_help(char **args);
+int (*builtin_func[]) (char **) = {
+  &lsh_cd,
+  &lsh_exit,
+  &lsh_help
+};
 
 int main(int argc, char **argv)
 {
@@ -34,40 +51,6 @@ void lsh_loop()
   } while(status);
 }
 
-// #define LSH_BUFSIZE 1024
-// char* lsh_getline()
-// {
-//   int bufsize = LSH_BUFSIZE;
-//   int position = 0;
-//   char *buffer = malloc(sizeof(char) * bufsize);
-//   int c;
-//
-//   if (!buffer) {
-//     fprintf(stderr, "lsh: allocation error\n");
-//     exit(EXIT_FAILURE);
-//   }
-//
-//   while (1) {
-//     c = getchar();
-//     if (c == EOF || c == '\n') {
-//       buffer[position] = '\0';
-//       return buffer;
-//     } else {
-//       buffer[position] = c;
-//     }
-//
-//     position++;
-//
-//     if (position >= bufsize) {
-//       bufsize += LSH_BUFSIZE;
-//       buffer = realloc(buffer, bufsize);
-//       if (!buffer) {
-//         fprintf(stderr, "lsh: allocation error\n");
-//         exit(EXIT_FAILURE);
-//       }
-//     }
-//   }
-// }
 char *lsh_getline()
 {
   char *line = NULL;
@@ -90,7 +73,7 @@ char** lsh_split_line(char* line)
   }
 
   token = strtok(line, LSH_TOKEN_DELIM);
-  where (token != NULL) {
+  while (token != NULL) {
     tokens[position] = token;
     position++;
 
@@ -112,25 +95,25 @@ char** lsh_split_line(char* line)
 int lsh_execute(char** argv)
 {
   int i;
-  if (args[0] == NULL) {
+  if (argv[0] == NULL) {
     return 1;
   }
   for (i = 0; i < lsh_num_builtins(); i++) {
-    if (strcmp(args[0], builtin_str[i]) == 0) {
-      return (*builtin_func[i](args));
+    if (strcmp(argv[0], builtin_str[i]) == 0) {
+      return (*builtin_func[i])(argv);
     }
   }
 
-  return lsh_launch(args);
+  return lsh_launch(argv);
 }
 
-int lsh_launch(char **args)
+int lsh_launch(char **argv)
 {
   pid_t pid, wpid;
   int status;
   pid = fork();
   if (pid == 0) {
-    if (execvp(args[0], args) == -1) {
+    if (execvp(argv[0], argv) == -1) {
       perror("lsh");
     }
     exit(EXIT_FAILURE);
@@ -148,15 +131,8 @@ int lsh_launch(char **args)
 int lsh_cd(char **args);
 int lsh_help(char **args);
 int lsh_exit(char **args);
-//list of builtin commands, followed by their correponding function.
-char *builtin_str[] = {
-  "cd",
-  "help",
-  "exit"
-};
 
 int lsh_num_builtins() { return sizeof(builtin_str) / sizeof(char*);}
-
 //builtin function implementations
 int lsh_cd(char **args)
 {
