@@ -65,7 +65,7 @@ char *parseCommand(char *cmdline)
       fprintf(stdout, "params number out of limits.");
       return NULL;
     }
-    token = strtok(cmdline, MSH_TOKEN_DELIM);
+    token = strtok(NULL, MSH_TOKEN_DELIM);
   }
   cmd[index] = NULL;
   return cmd;
